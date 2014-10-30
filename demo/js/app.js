@@ -5,33 +5,45 @@
 //particlesJS('dom-id');
 
 //rect reader
-var Position = function (x, y) {
+var Vector2d = function (x, y) {
     this.x = x | 0.0;
     this.y = y | 0.0;
 };
 
-var Offset = function (x, y) {
-    this.x = x | 0.0;
-    this.y = y | 0.0;
+Vector2d.prototype.distance = function (vector2d) {
+    return Math.sqrt(Math.pow((this.x - vector2d.x), 2) + Math.pow(this.y - vector2d.y, 2));
 };
+
+
+var Line2D = function (p1, p2) {
+    this.p1 = p1;
+    this.p2 = p2;
+
+    this.length = function () {
+        return this.p1.distance(this.p2);
+    };
+
+    this.weight =  1 / this.length();//Strength of the line, longer is weaker
+};
+
 
 svgGroup = document.getElementById('Group1');
 rects = svgGroup.getElementsByTagName('rect');
 
 var raw_particles = [];
-var offset1 = new Offset(36.0, 0);
+var offset1 = new Vector2d(36.0, 0);
 
 for (var i = 0; i < rects.length; i++) {
-    raw_particles.push(new Position(parseFloat(rects[i].getAttribute('x')) + offset1.x, parseFloat(rects[i].getAttribute('y')) + offset1.y));
+    raw_particles.push(new Vector2d(parseFloat(rects[i].getAttribute('x')) + offset1.x, parseFloat(rects[i].getAttribute('y')) + offset1.y));
 }
 
 svgGroup = document.getElementById('Group2');
 rects = svgGroup.getElementsByTagName('rect');
 
-var offset2 = new Offset(1.0, 150.0);
+var offset2 = new Vector2d(1.0, 150.0);
 
 for (var i = 0; i < rects.length; i++) {
-    raw_particles.push(new Position(parseFloat(rects[i].getAttribute('x')) + offset2.x, parseFloat(rects[i].getAttribute('y')) + offset2.y));
+    raw_particles.push(new Vector2d(parseFloat(rects[i].getAttribute('x')) + offset2.x, parseFloat(rects[i].getAttribute('y')) + offset2.y));
 }
 
 
