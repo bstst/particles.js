@@ -49,7 +49,7 @@ particlesJS('particles-js', {
         size_random: false,
         raw_particles: raw_particles,
         anim: {
-            speed: 1
+            speed: 0.15
         },
         line_linked: {
             color: '#000',
