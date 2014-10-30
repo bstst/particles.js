@@ -206,6 +206,7 @@ function launchParticlesJS(tag_id, params) {
                     break;
 
                 case 'edge':
+                case 'rect':
                     pJS.canvas.ctx.rect(this.x, this.y, this.radius * 2, this.radius * 2);
                     break;
 
