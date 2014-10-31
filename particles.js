@@ -21,6 +21,7 @@ function launchParticlesJS(tag_id, params) {
             size: 2.5,
             size_random: true,
             nb: 200,
+            out_of_canvas: false,
             line_linked: {
                 enable_auto: true,
                 distance: 100,
@@ -64,6 +65,7 @@ function launchParticlesJS(tag_id, params) {
             if (params.particles.size) pJS.particles.size = params.particles.size;
             if (params.particles.size_random == false) pJS.particles.size_random = params.particles.size_random;
             if (params.particles.nb) pJS.particles.nb = params.particles.nb;
+            if (params.particles.out_of_canvas) pJS.particles.out_of_canvas = params.particles.out_of_canvas;
             if (params.particles.raw_particles) pJS.particles.raw_particles = params.particles.raw_particles;
             if (params.particles.line_linked) {
                 if (params.particles.line_linked.raw_lines) pJS.particles.line_linked.raw_lines = params.particles.line_linked.raw_lines;
@@ -245,10 +247,12 @@ function launchParticlesJS(tag_id, params) {
             p.position.y += p.vy * (pJS.particles.anim.speed / 2);
 
             /* change particle position if it is out of canvas */
-            if (p.position.x - p.radius > pJS.canvas.w) p.position.x = p.radius;
-            else if (p.position.x + p.radius < 0) p.x = pJS.canvas.w + p.radius;
-            if (p.position.y - p.radius > pJS.canvas.h) p.y = p.radius;
-            else if (p.position.y + p.radius < 0) p.position.y = pJS.canvas.h + p.radius;
+            if (!pJS.particles.out_of_canvas) {
+                if (p.position.x - p.radius > pJS.canvas.w) p.position.x = p.radius;
+                else if (p.position.x + p.radius < 0) p.x = pJS.canvas.w + p.radius;
+                if (p.position.y - p.radius > pJS.canvas.h) p.y = p.radius;
+                else if (p.position.y + p.radius < 0) p.position.y = pJS.canvas.h + p.radius;
+            }
 
             /* Check distance between each particle and mouse position */
             for (var j = i + 1; j < pJS.particles.array.length; j++) {
