@@ -5,27 +5,29 @@
  /* How to use? : Check the GitHub README
  /* ----------------------------------------------- */
 
-(function() {
+(function () {
     var lastTime = 0;
     var vendors = ['ms', 'moz', 'webkit', 'o'];
-    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-        window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
-                                   || window[vendors[x]+'CancelRequestAnimationFrame'];
+    for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+        window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame']
+            || window[vendors[x] + 'CancelRequestAnimationFrame'];
     }
 
     if (!window.requestAnimationFrame)
-        window.requestAnimationFrame = function(callback, element) {
+        window.requestAnimationFrame = function (callback, element) {
             var currTime = new Date().getTime();
             var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-            var id = window.setTimeout(function() { callback(currTime + timeToCall); },
-              timeToCall);
+            var id = window.setTimeout(function () {
+                    callback(currTime + timeToCall);
+                },
+                timeToCall);
             lastTime = currTime + timeToCall;
             return id;
         };
 
     if (!window.cancelAnimationFrame)
-        window.cancelAnimationFrame = function(id) {
+        window.cancelAnimationFrame = function (id) {
             clearTimeout(id);
         };
 }());
@@ -189,7 +191,7 @@ function launchParticlesJS(tag_id, params) {
 
         /* position */
         if (position === undefined) {
-            this.position = new Vector2d( Math.random() * pJS.canvas.w, Math.random() * pJS.canvas.h);
+            this.position = new Vector2d(Math.random() * pJS.canvas.w, Math.random() * pJS.canvas.h);
         } else {
             this.position = position;
             if (pJS.retina) {
@@ -290,25 +292,25 @@ function launchParticlesJS(tag_id, params) {
                 else if (p.position.y + p.radius < 0) p.vy = -p.vy;
             }
 
-            /* Check distance between each particle and mouse position */
+            /* set interactivity if enable */
+            if (pJS.interactivity.enable) {
+
+                /* interactivity mode */
+                switch (pJS.interactivity.mode) {
+                    case 'grab':
+                        pJS.fn.vendors.interactivity.grabParticles(p);
+                        break;
+                }
+
+            }
+
+            /* Check distance between each particle  */
             for (var j = i + 1; j < pJS.particles.array.length; j++) {
                 var p2 = pJS.particles.array[j];
 
                 /* link particles if enable */
                 if (pJS.particles.line_linked.enable_auto) {
                     pJS.fn.vendors.distanceParticles(p, p2);
-                }
-
-                /* set interactivity if enable */
-                if (pJS.interactivity.enable) {
-
-                    /* interactivity mode */
-                    switch (pJS.interactivity.mode) {
-                        case 'grab':
-                            pJS.fn.vendors.interactivity.grabParticles(p, p2);
-                            break;
-                    }
-
                 }
             }
         }
@@ -317,10 +319,10 @@ function launchParticlesJS(tag_id, params) {
                 var line = pJS.particles.line_linked.raw_lines[i];
                 var weight = line.weight;
                 if (pJS.retina) {
-                     var weight = line.weight / 2;
+                    var weight = line.weight / 2;
                 }
                 var alpha = 1 / (line.length() * weight);
-                if (alpha > 0.30){
+                if (alpha > 0.30) {
                     pJS.fn.vendors.drawLine(alpha, line.p1, line.p2);
                 }
             }
@@ -350,7 +352,7 @@ function launchParticlesJS(tag_id, params) {
 
     /* ---------- VENDORS functions ------------ */
 
-    pJS.fn.vendors.drawLine = function(alpha, p1, p2) {
+    pJS.fn.vendors.drawLine = function (alpha, p1, p2) {
         var color_line = pJS.particles.line_linked.color_rgb_line;
         pJS.canvas.ctx.beginPath();
         pJS.canvas.ctx.strokeStyle = 'rgba(' + color_line.r + ',' + color_line.g + ',' + color_line.b + ',' + alpha + ')';
@@ -363,9 +365,7 @@ function launchParticlesJS(tag_id, params) {
 
     pJS.fn.vendors.distanceParticles = function (p1, p2) {
 
-        var dx = p1.position.x - p2.position.x,
-            dy = p1.position.y - p2.position.y,
-            dist = Math.sqrt(dx * dx + dy * dy);
+        var dist = p1.position.distance(p2.position);
 
         /* Check distance between particle and mouse mos */
         if (dist <= pJS.particles.line_linked.distance) {
@@ -414,17 +414,11 @@ function launchParticlesJS(tag_id, params) {
         }
     };
 
-    pJS.fn.vendors.interactivity.grabParticles = function (p1, p2) {
-        var dx = p1.position.x - p2.position.x,
-            dy = p1.position.y - p2.position.y,
-            dist = Math.sqrt(dx * dx + dy * dy);
-
-        var dx_mouse = p1.position.x - pJS.interactivity.mouse.pos_x,
-            dy_mouse = p1.position.y - pJS.interactivity.mouse.pos_y,
-            dist_mouse = Math.sqrt(dx_mouse * dx_mouse + dy_mouse * dy_mouse);
+    pJS.fn.vendors.interactivity.grabParticles = function (p1) {
+        var dist_mouse = p1.position.distance(new Vector2d(pJS.interactivity.mouse.pos_x, pJS.interactivity.mouse.pos_y));
 
         /* Check distace between 2 particles + Check distance between 1 particle and mouse position */
-        if (dist <= pJS.particles.line_linked.distance && dist_mouse <= pJS.interactivity.mouse.distance && pJS.interactivity.status == 'mousemove') {
+        if (dist_mouse <= pJS.interactivity.mouse.distance && pJS.interactivity.status == 'mousemove') {
             /* Draw the line */
             var color_line = pJS.particles.line_linked.color_rgb_line;
             pJS.canvas.ctx.beginPath();
@@ -458,7 +452,7 @@ function launchParticlesJS(tag_id, params) {
     launchParticles();
 
     if (pJS.particles.anim.enable) {
-		launchAnimation();
+        launchAnimation();
     }
 
     if (pJS.interactivity.enable) {
