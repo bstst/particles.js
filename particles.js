@@ -48,6 +48,7 @@ function launchParticlesJS(tag_id, params) {
             size_random: true,
             nb: 200,
             out_of_canvas: false,
+            bounce: false,
             line_linked: {
                 enable_auto: true,
                 distance: 100,
@@ -92,6 +93,7 @@ function launchParticlesJS(tag_id, params) {
             if (params.particles.size_random == false) pJS.particles.size_random = params.particles.size_random;
             if (params.particles.nb) pJS.particles.nb = params.particles.nb;
             if (params.particles.out_of_canvas) pJS.particles.out_of_canvas = params.particles.out_of_canvas;
+            if (params.particles.bounce) pJS.particles.bounce = params.particles.bounce;
             if (params.particles.raw_particles) pJS.particles.raw_particles = params.particles.raw_particles;
             if (params.particles.line_linked) {
                 if (params.particles.line_linked.raw_lines) pJS.particles.line_linked.raw_lines = params.particles.line_linked.raw_lines;
@@ -264,6 +266,7 @@ function launchParticlesJS(tag_id, params) {
     };
 
     pJS.fn.particlesAnimate = function () {
+
         for (var i = 0; i < pJS.particles.array.length; i++) {
             /* the particle */
             var p = pJS.particles.array[i];
@@ -278,6 +281,13 @@ function launchParticlesJS(tag_id, params) {
                 else if (p.position.x + p.radius < 0) p.x = pJS.canvas.w + p.radius;
                 if (p.position.y - p.radius > pJS.canvas.h) p.y = p.radius;
                 else if (p.position.y + p.radius < 0) p.position.y = pJS.canvas.h + p.radius;
+            }
+
+            if (pJS.particles.bounce) {
+                if (p.position.x - p.radius > pJS.canvas.w) p.vx = -p.vx;
+                else if (p.position.x + p.radius < 0) p.vx = -p.vx;
+                if (p.position.y - p.radius > pJS.canvas.h) p.vy = -p.vy;
+                else if (p.position.y + p.radius < 0) p.vy = -p.vy;
             }
 
             /* Check distance between each particle and mouse position */
@@ -309,7 +319,10 @@ function launchParticlesJS(tag_id, params) {
                 if (pJS.retina) {
                      var weight = line.weight / 2;
                 }
-                pJS.fn.vendors.drawLine(1 / (line.length() * weight), line.p1, line.p2);
+                var alpha = 1 / (line.length() * weight);
+                if (alpha > 0.30){
+                    pJS.fn.vendors.drawLine(alpha, line.p1, line.p2);
+                }
             }
         }
 

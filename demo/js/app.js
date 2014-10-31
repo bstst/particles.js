@@ -97,6 +97,7 @@ particlesJS('particles-js', {
         size_random: false,
         raw_particles: raw_particles,
         out_of_canvas: true,
+        bounce: true,
         anim: {
             speed: 0.15
         },
