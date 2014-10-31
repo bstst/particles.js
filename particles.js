@@ -66,6 +66,7 @@ function launchParticlesJS(tag_id, params) {
             if (params.particles.nb) pJS.particles.nb = params.particles.nb;
             if (params.particles.raw_particles) pJS.particles.raw_particles = params.particles.raw_particles;
             if (params.particles.line_linked) {
+                if (params.particles.line_linked.raw_lines) pJS.particles.line_linked.raw_lines = params.particles.line_linked.raw_lines;
                 if (params.particles.line_linked.enable_auto == false) pJS.particles.line_linked.enable_auto = params.particles.line_linked.enable_auto;
                 if (params.particles.line_linked.distance) pJS.particles.line_linked.distance = params.particles.line_linked.distance;
                 if (params.particles.line_linked.color) pJS.particles.line_linked.color = params.particles.line_linked.color;
@@ -158,15 +159,12 @@ function launchParticlesJS(tag_id, params) {
 
         /* position */
         if (position === undefined) {
-            this.x = Math.random() * pJS.canvas.w;
-            this.y = Math.random() * pJS.canvas.h;
+            this.position = new Vector2d( Math.random() * pJS.canvas.w, Math.random() * pJS.canvas.h);
         } else {
-            if (!pJS.retina) {
-                this.x = position.x;
-                this.y = position.y;
-            } else {
-                this.x = position.x * 2;
-                this.y = position.y * 2;
+            this.position = position;
+            if (pJS.retina) {
+                this.position.x *= 2;
+                this.position.y *= 2;
             }
         }
 
@@ -202,18 +200,18 @@ function launchParticlesJS(tag_id, params) {
 
             switch (pJS.particles.shape) {
                 case 'circle':
-                    pJS.canvas.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                    pJS.canvas.ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false);
                     break;
 
                 case 'edge':
                 case 'rect':
-                    pJS.canvas.ctx.rect(this.x, this.y, this.radius * 2, this.radius * 2);
+                    pJS.canvas.ctx.rect(this.position.x, this.position.y, this.radius * 2, this.radius * 2);
                     break;
 
                 case 'triangle':
-                    pJS.canvas.ctx.moveTo(this.x, this.y);
-                    pJS.canvas.ctx.lineTo(this.x + this.radius, this.y + this.radius * 2);
-                    pJS.canvas.ctx.lineTo(this.x - this.radius, this.y + this.radius * 2);
+                    pJS.canvas.ctx.moveTo(this.position.x, this.position.y);
+                    pJS.canvas.ctx.lineTo(this.position.x + this.radius, this.position.y + this.radius * 2);
+                    pJS.canvas.ctx.lineTo(this.position.x - this.radius, this.position.y + this.radius * 2);
                     pJS.canvas.ctx.closePath();
                     break;
             }
@@ -243,14 +241,14 @@ function launchParticlesJS(tag_id, params) {
             var p = pJS.particles.array[i];
 
             /* move the particle */
-            p.x += p.vx * (pJS.particles.anim.speed / 2);
-            p.y += p.vy * (pJS.particles.anim.speed / 2);
+            p.position.x += p.vx * (pJS.particles.anim.speed / 2);
+            p.position.y += p.vy * (pJS.particles.anim.speed / 2);
 
             /* change particle position if it is out of canvas */
-            if (p.x - p.radius > pJS.canvas.w) p.x = p.radius;
-            else if (p.x + p.radius < 0) p.x = pJS.canvas.w + p.radius;
-            if (p.y - p.radius > pJS.canvas.h) p.y = p.radius;
-            else if (p.y + p.radius < 0) p.y = pJS.canvas.h + p.radius;
+            if (p.position.x - p.radius > pJS.canvas.w) p.position.x = p.radius;
+            else if (p.position.x + p.radius < 0) p.x = pJS.canvas.w + p.radius;
+            if (p.position.y - p.radius > pJS.canvas.h) p.y = p.radius;
+            else if (p.position.y + p.radius < 0) p.position.y = pJS.canvas.h + p.radius;
 
             /* Check distance between each particle and mouse position */
             for (var j = i + 1; j < pJS.particles.array.length; j++) {
@@ -272,10 +270,19 @@ function launchParticlesJS(tag_id, params) {
                     }
 
                 }
-
-
             }
         }
+        if (pJS.particles.line_linked.raw_lines !== undefined) {
+            for (i = 0; i < pJS.particles.line_linked.raw_lines.length; i++) {
+                var line = pJS.particles.line_linked.raw_lines[i];
+                var weight = line.weight;
+                if (pJS.retina) {
+                     var weight = line.weight / 2;
+                }
+                pJS.fn.vendors.drawLine(1 / (line.length() * weight), line.p1, line.p2);
+            }
+        }
+
     };
 
     pJS.fn.particlesDraw = function () {
@@ -300,29 +307,34 @@ function launchParticlesJS(tag_id, params) {
 
     /* ---------- VENDORS functions ------------ */
 
+    pJS.fn.vendors.drawLine = function(alpha, p1, p2) {
+        var color_line = pJS.particles.line_linked.color_rgb_line;
+        pJS.canvas.ctx.beginPath();
+        pJS.canvas.ctx.strokeStyle = 'rgba(' + color_line.r + ',' + color_line.g + ',' + color_line.b + ',' + alpha + ')';
+        pJS.canvas.ctx.moveTo(p1.x, p1.y);
+        pJS.canvas.ctx.lineTo(p2.x, p2.y);
+        pJS.canvas.ctx.lineWidth = pJS.particles.line_linked.width;
+        pJS.canvas.ctx.stroke();
+        pJS.canvas.ctx.closePath();
+    };
+
     pJS.fn.vendors.distanceParticles = function (p1, p2) {
 
-        var dx = p1.x - p2.x,
-            dy = p1.y - p2.y,
+        var dx = p1.position.x - p2.position.x,
+            dy = p1.position.y - p2.position.y,
             dist = Math.sqrt(dx * dx + dy * dy);
 
         /* Check distance between particle and mouse mos */
         if (dist <= pJS.particles.line_linked.distance) {
 
             /* draw the line */
-            var color_line = pJS.particles.line_linked.color_rgb_line;
-            pJS.canvas.ctx.beginPath();
-            pJS.canvas.ctx.strokeStyle = 'rgba(' + color_line.r + ',' + color_line.g + ',' + color_line.b + ',' + (pJS.particles.line_linked.opacity - dist / pJS.particles.line_linked.distance) + ')';
-            pJS.canvas.ctx.moveTo(p1.x, p1.y);
-            pJS.canvas.ctx.lineTo(p2.x, p2.y);
-            pJS.canvas.ctx.lineWidth = pJS.particles.line_linked.width;
-            pJS.canvas.ctx.stroke();
-            pJS.canvas.ctx.closePath();
+            var alpha = (pJS.particles.line_linked.opacity - dist / pJS.particles.line_linked.distance);
+            pJS.fn.vendors.drawLine(dist, p1.position, p2.position);
 
             /* condensed particles */
             if (pJS.particles.line_linked.condensed_mode.enable) {
-                dx = p1.x - p2.x;
-                dy = p1.y - p2.y;
+                dx = p1.position.x - p2.position.x;
+                dy = p1.position.y - p2.position.y;
                 var ax = dx / (pJS.particles.line_linked.condensed_mode.rotateX * 1000);
                 var ay = dy / (pJS.particles.line_linked.condensed_mode.rotateY * 1000);
                 // p1.vx -= ax;
@@ -360,12 +372,12 @@ function launchParticlesJS(tag_id, params) {
     };
 
     pJS.fn.vendors.interactivity.grabParticles = function (p1, p2) {
-        var dx = p1.x - p2.x,
-            dy = p1.y - p2.y,
+        var dx = p1.position.x - p2.position.x,
+            dy = p1.position.y - p2.position.y,
             dist = Math.sqrt(dx * dx + dy * dy);
 
-        var dx_mouse = p1.x - pJS.interactivity.mouse.pos_x,
-            dy_mouse = p1.y - pJS.interactivity.mouse.pos_y,
+        var dx_mouse = p1.position.x - pJS.interactivity.mouse.pos_x,
+            dy_mouse = p1.position.y - pJS.interactivity.mouse.pos_y,
             dist_mouse = Math.sqrt(dx_mouse * dx_mouse + dy_mouse * dy_mouse);
 
         /* Check distace between 2 particles + Check distance between 1 particle and mouse position */
@@ -374,7 +386,7 @@ function launchParticlesJS(tag_id, params) {
             var color_line = pJS.particles.line_linked.color_rgb_line;
             pJS.canvas.ctx.beginPath();
             pJS.canvas.ctx.strokeStyle = 'rgba(' + color_line.r + ',' + color_line.g + ',' + color_line.b + ',' + (pJS.particles.line_linked.opacity - dist_mouse / pJS.interactivity.mouse.distance) + ')';
-            pJS.canvas.ctx.moveTo(p1.x, p1.y);
+            pJS.canvas.ctx.moveTo(p1.position.x, p1.position.y);
             pJS.canvas.ctx.lineTo(pJS.interactivity.mouse.pos_x, pJS.interactivity.mouse.pos_y);
             pJS.canvas.ctx.lineWidth = pJS.particles.line_linked.width;
             pJS.canvas.ctx.stroke();
